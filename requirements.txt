@@ -1,6 +1,4 @@
-torch~=2.7.0
-fastapi~=0.115.12
-pydantic~=2.5.3
-transformers~=4.51.3
-gradio~=5.29.0
-requests~=2.31.0
+fastapi
+uvicorn
+transformers
+torch
