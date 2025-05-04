@@ -1,31 +1,15 @@
-# main.py
+FROM python:3.12
 
-from fastapi import FastAPI
-from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
-import torch.nn.functional as F
+WORKDIR /code
 
-app = FastAPI()
+COPY requirements.txt /code/requirements.txt
 
-# Load pretrained sentiment model
-model_name = "cardiffnlp/twitter-roberta-base-sentiment"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+RUN pip install --no-cache-dir -r /code/requirements.txt
 
-labels = ["negative", "neutral", "positive"]
+COPY . /code/app
 
-class TextIn(BaseModel):
-    text: str
+EXPOSE 8000
 
-@app.post("/predict")
-def predict(input: TextIn):
-    inputs = tokenizer(input.text, return_tensors="pt", truncation=True, padding=True)
-    with torch.no_grad():
-        logits = model(**inputs).logits
-        probs = F.softmax(logits, dim=1)
-        pred = torch.argmax(probs, dim=1).item()
-    return {
-        "label": labels[pred],
-        "confidence": round(probs[0][pred].item(), 4)
-    }
+CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
