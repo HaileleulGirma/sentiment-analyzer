@@ -1,20 +1,23 @@
-# Use the official Python image from the Docker Hub
+# Use an official Python base image
 FROM python:3.10-slim
 
-# Set the working directory in the container
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set working directory in container
 WORKDIR /app
 
-# Copy the requirements.txt into the container at /app
-COPY requirements.txt .
 
-# Install the dependencies
+# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application code into the container at /app
+# Copy project files into the container
 COPY . .
 
-# Expose the port your app will run on (FastAPI uses 8000 by default)
-EXPOSE 8000
+# Expose port for Gradio
+EXPOSE 7860
 
-# Command to run the application using Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the app
+CMD ["python", "main.py"]
