@@ -1,69 +1,54 @@
 import os
-import re
-import torch
 import gradio as gr
-import praw
-import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from flask import Flask, request, redirect
+import torch
+import torch.nn.functional as F
+import praw
+import re
 
-# === Load Model ===
+# Load tokenizer and model
 model_name = "AdamCodd/tinybert-sentiment-amazon"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
 
-# === Flask Setup for OAuth ===
-app = Flask(__name__)
-
 CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
 CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDDIT_REDIRECT_URI")  # e.g. "http://localhost:8080/authorize_callback"
+  # e.g. "http://localhost:8080/authorize_callback"
 USER_AGENT = os.getenv("REDDIT_USER_AGENT")
 
+# Reddit API setup using PRAW
 reddit = praw.Reddit(
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    redirect_uri=REDIRECT_URI,
-    user_agent=USER_AGENT
+    client_id=CLIENT_ID,  # Replace with your Reddit API client_id
+    client_secret=CLIENT_SECRET,  # Replace with your Reddit API client_secret
+    user_agent=USER_AGENT  # Replace with a user agent string
 )
 
-# Store user's Reddit session globally (not secure for production)
-authenticated_reddit = {}
 
-@app.route("/")
-def login():
-    auth_url = reddit.auth.url(["identity", "read"], state="random123", duration="permanent")
-    return f"<a href='{auth_url}'>Login with Reddit</a>"
-
-@app.route("/authorize_callback")
-def callback():
-    code = request.args.get("code")
-    refresh_token = reddit.auth.authorize(code)
-    # Save Reddit instance with refresh token
-    authenticated_reddit["session"] = praw.Reddit(
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        refresh_token=refresh_token,
-        user_agent=USER_AGENT
-    )
-    return redirect("/gradio")
-
-# === Gradio Sentiment Interface ===
+# Function to scrape Reddit post text
 def get_reddit_post_text(post_url):
     try:
+        # Extract post ID from URL
         post_id = re.findall(r"comments/([a-zA-Z0-9]+)/", post_url)[0]
-        session = authenticated_reddit.get("session")
-        if not session:
-            return "Error: You must log in with Reddit first."
-        submission = session.submission(id=post_id)
-        return f"Title: {submission.title}\n\nText: {submission.selftext}"
-    except Exception as e:
-        return f"Error: {str(e)}"
+        submission = reddit.submission(id=post_id)
 
+        # Get title and content (selftext)
+        title = submission.title
+        text = submission.selftext
+
+        return f"Title: {title}\n\nText: {text}"
+    except Exception as e:
+        return f"Error: Unable to retrieve the post. {str(e)}"
+
+
+# Gradio interface function for sentiment prediction
 def predict_sentiment(post_url):
+    # Get Reddit post text using the URL
     post_text = get_reddit_post_text(post_url)
-    if "Error" in post_text:
+
+    if "Error" in post_text:  # If there was an issue with the Reddit post retrieval
         return post_text
+
+    # Perform sentiment analysis on the post text
     inputs = tokenizer(post_text, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
@@ -71,16 +56,16 @@ def predict_sentiment(post_url):
         predicted_class = torch.argmax(probs).item()
         sentiment = "Positive" if predicted_class == 1 else "Negative"
         confidence = probs[0][predicted_class].item()
+
     return f"Sentiment: {sentiment} (Confidence: {round(confidence * 100, 2)}%)\n\n{post_text}"
 
-@app.route("/gradio")
-def launch_gradio():
-    interface = gr.Interface(
-        fn=predict_sentiment,
-        inputs=gr.Textbox(lines=2, placeholder="Enter a Reddit post URL..."),
-        outputs="text",
-        title="Sentiment Analyzer for Reddit",
-        description="Analyze Reddit post sentiment after logging in."
-    )
-    interface.launch(share=False, server_name="0.0.0.0", server_port=7860, inbrowser=True)
-    return "Launching Gradio..."
+
+# Gradio interface setup
+interface = gr.Interface(fn=predict_sentiment,
+                         inputs=gr.Textbox(lines=2, placeholder="Enter a Reddit post URL..."),
+                         outputs="text",
+                         title="Sentiment Analyzer for Reddit",
+                         description="Enter a Reddit post URL, and this tool will analyze its sentiment using DistilRoBERTa.")
+
+# Launch Gradio interface
+interface.launch(share=True, server_name="0.0.0.0", server_port=7860, inbrowser=False)
