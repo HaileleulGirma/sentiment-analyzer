@@ -65,7 +65,7 @@ interface = gr.Interface(fn=predict_sentiment,
                          inputs=gr.Textbox(lines=2, placeholder="Enter a Reddit post URL..."),
                          outputs="text",
                          title="Sentiment Analyzer for Reddit",
-                         description="Enter a Reddit post URL, and this tool will analyze its sentiment using DistilRoBERTa.")
+                         description="Enter a Reddit post URL, and this tool will analyze its sentiment using TinyBERT.")
 
 # Launch Gradio interface
 interface.launch(share=True, server_name="0.0.0.0", server_port=7860, inbrowser=False)
