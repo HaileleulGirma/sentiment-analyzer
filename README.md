@@ -8,7 +8,7 @@ A lightweight, cloud-deployable web app for binary sentiment classification usin
 
 This project demonstrates how a distilled transformer model can be used to perform sentiment analysis on user input text, delivering fast and accurate results with minimal computational overhead.
 
-- 🔍 **Model**: `prajjwal1/bert-tiny` from Hugging Face
+- 🔍 **Model**: `AdamCodd/bert-tiny` from Hugging Face
 - 🌐 **UI & Backend**: Gradio
 - 🐳 **Containerization**: Docker
 - ☁️ **Deployment**: Render.com
@@ -44,7 +44,6 @@ This project demonstrates how a distilled transformer model can be used to perfo
 3. The `bert-tiny` model returns a sentiment prediction.
 4. Confidence score is calculated and shown on the page.
 
-![Architecture](https://raw.githubusercontent.com/your-username/your-repo/main/assets/architecture.png) *(Replace with actual image path)*
 
 ---
 
