@@ -53,7 +53,3 @@ This project demonstrates how a distilled transformer model can be used to perfo
 
 - Python 3.10+
 - Docker (optional for containerized runs)
-
-### Clone the repo
-
-```
