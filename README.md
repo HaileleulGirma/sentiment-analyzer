@@ -1,6 +1,6 @@
 # TinyBERT Sentiment Analyzer 🧠💬
 
-A lightweight, cloud-deployable web app for binary sentiment classification using the `prajjwal1/bert-tiny` transformer model from Hugging Face. Built with Gradio, containerized with Docker, and deployed on Render.com.
+A lightweight, cloud-deployable web app for binary sentiment classification using the `AdamCodd/bert-tiny` transformer model from Hugging Face. Built with Gradio, containerized with Docker, and deployed on Render.com.
 
 ---
 
